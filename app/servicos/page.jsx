@@ -38,7 +38,7 @@ const Servicos = () => {
                         {servicos.map(servico => (
                             <tr key={servico.id} className="hover:bg-gray-100">
                                 <td className="py-2 px-4 border-b">{servico.id}</td>
-                                <td className="py-2 px-4 border-b">{servico.cliente.nome}</td>
+                                <td className="py-2 px-4 border-b">{servico.cliente ? servico.cliente.nome : 'Cliente não encontrado'}</td>
                                 <td className="py-2 px-4 border-b">{servico.descricao}</td>
                                 <td className="py-2 px-4 border-b">{servico.status}</td>
                             </tr>
