@@ -70,7 +70,7 @@ const ServicosPage = () => {
                         id="descricao"
                         value={descricao}
                         onChange={(e) => setDescricao(e.target.value)}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
+                        className="border p-2 w-full"
                     />
                 </div>
                 <div className="mb-2">
@@ -79,7 +79,7 @@ const ServicosPage = () => {
                         id="status"
                         value={status}
                         onChange={(e) => setStatus(e.target.value)}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
+                        className="border p-2 w-full"
                     >
                         <option value="ORCAMENTO">Orçamento</option>
                         <option value="ANDAMENTO">Andamento</option>
@@ -93,7 +93,7 @@ const ServicosPage = () => {
                         id="valor"
                         value={valor}
                         onChange={(e) => setValor(e.target.value)}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
+                        className="border p-2 w-full"
                     />
                 </div>
                 <div className="mb-2">
@@ -102,7 +102,7 @@ const ServicosPage = () => {
                         id="clienteId"
                         value={clienteId}
                         onChange={(e) => setClienteId(e.target.value)}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
+                        className="border p-2 w-full"
                     >
                         <option value="">Selecione um Cliente</option>
                         {clientes.map(cliente => (
@@ -114,7 +114,7 @@ const ServicosPage = () => {
                 </div>
                 <button
                     type="submit"
-                    className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                    className="bg-blue-500 text-white px-4 py-2"
                 >
                     Cadastrar Serviço
                 </button>
