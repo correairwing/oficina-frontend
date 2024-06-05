@@ -1,9 +1,8 @@
-"use client"
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import Link from 'next/link';
 
 const ServicosPage = () => {
     const [servicos, setServicos] = useState([]);
@@ -114,7 +113,7 @@ const ServicosPage = () => {
                 </div>
                 <button
                     type="submit"
-                    className="bg-blue-500 text-white px-4 py-2"
+                    className="bg-blue-500 text-white px-4 py-2 "
                 >
                     Cadastrar Serviço
                 </button>
@@ -122,11 +121,29 @@ const ServicosPage = () => {
             <ul>
                 {servicos.map(servico => (
                     <li key={servico.id} className="mb-2">
-                        <div className="p-4 border rounded-md shadow-sm">
+                        <div className="p-4 border  shadow-sm">
                             <p><strong>Descrição:</strong> {servico.descricao}</p>
                             <p><strong>Status:</strong> {servico.status}</p>
                             <p><strong>Valor:</strong> {servico.valor}</p>
                             <p><strong>Cliente:</strong> {servico.cliente.nome}</p>
+                            <Link href={`/servicos/${servico.id}`} className="text-blue-500 underline">
+                                Ver detalhes
+                            </Link>
+                            <button
+                                onClick={async () => {
+                                    if (confirm('Tem certeza que deseja excluir este serviço?')) {
+                                        try {
+                                            await axios.delete(`http://localhost:8080/api/servico/${servico.id}`);
+                                            setServicos(servicos.filter(s => s.id !== servico.id));
+                                        } catch (error) {
+                                            console.error('Erro ao excluir serviço:', error);
+                                        }
+                                    }
+                                }}
+                                className="bg-red-500 text-white px-4 py-2  ml-4"
+                            >
+                                Excluir
+                            </button>
                         </div>
                     </li>
                 ))}
