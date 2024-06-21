@@ -14,6 +14,9 @@ const NavBar = () => {
                     <Link href="/servicos" className='text-gray-100'>
                         Serviços
                     </Link>
+                    <Link href="/orcamento" className="text-gray-100">
+                        Orçamento +
+                    </Link>
                 </div>
             </div>
         </nav>
