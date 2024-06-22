@@ -20,7 +20,7 @@ const Orcamento = () => {
     useEffect(() => {
         const fetchClientes = async () => {
             try {
-                const response = await axios.get('http://localhost:8080/api/cliente');
+                const response = await axios.get('http://localhost:8080/api/cliente/');
                 setClientes(response.data);
             } catch (error) {
                 console.error('Erro ao buscar clientes:', error);
