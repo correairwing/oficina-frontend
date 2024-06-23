@@ -1,81 +1,75 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 
-const Orcamento = () => {
+const OrcamentoPage = () => {
     const router = useRouter();
     const [clientes, setClientes] = useState([]);
-    const [clienteSelecionado, setClienteSelecionado] = useState(null);
-    const [veiculo, setVeiculo] = useState('');
-    const [placa, setPlaca] = useState('');
-    const [marca, setMarca] = useState('');
-    const [ano, setAno] = useState('');
-    const [servicos, setServicos] = useState([
-        { descricao: '', unidade: '', valor: '', total: '' }
-    ]);
+    const [veiculos, setVeiculos] = useState([]);
+    const [clienteId, setClienteId] = useState('');
+    const [veiculoId, setVeiculoId] = useState('');
+    const [servicos, setServicos] = useState([{ descricao: '', status: 'ORCAMENTO', valor: 0 }]);
     const [totalBruto, setTotalBruto] = useState(0);
+    const [totalLiquido, setTotalLiquido] = useState(0);
 
     useEffect(() => {
         const fetchClientes = async () => {
             try {
-                const response = await axios.get('http://localhost:8080/api/cliente/');
+                const response = await axios.get('/cliente');
                 setClientes(response.data);
             } catch (error) {
                 console.error('Erro ao buscar clientes:', error);
             }
         };
 
+        const fetchVeiculos = async () => {
+            try {
+                const response = await axios.get('/api/veiculos');
+                setVeiculos(response.data);
+            } catch (error) {
+                console.error('Erro ao buscar veículos:', error);
+            }
+        };
+
         fetchClientes();
+        fetchVeiculos();
     }, []);
 
-    const handleClienteChange = (e) => {
-        const clienteId = e.target.value;
-        const cliente = clientes.find(c => c.id === parseInt(clienteId));
-        setClienteSelecionado(cliente);
-        setVeiculo(cliente.veiculo || '');
-        setPlaca(cliente.placa || '');
-        setMarca(cliente.marca || '');
-        setAno(cliente.ano || '');
-    };
-
-    const handleAddServico = () => {
-        setServicos([...servicos, { descricao: '', unidade: '', valor: '', total: '' }]);
-    };
-
-    const handleChangeServico = (index, field, value) => {
-        const newServicos = servicos.slice();
-        newServicos[index][field] = value;
-
-        if (field === 'valor' || field === 'unidade') {
-            const unidade = parseFloat(newServicos[index].unidade) || 0;
-            const valor = parseFloat(newServicos[index].valor) || 0;
-            newServicos[index].total = (unidade * valor).toFixed(2);
-        }
-
+    const handleServicoChange = (index, key, value) => {
+        const newServicos = [...servicos];
+        newServicos[index][key] = value;
         setServicos(newServicos);
-        updateTotalBruto(newServicos);
+        calculateTotals(newServicos);
     };
 
-    const updateTotalBruto = (servicos) => {
-        const total = servicos.reduce((acc, servico) => acc + parseFloat(servico.total || 0), 0);
-        setTotalBruto(total.toFixed(2));
+    const calculateTotals = (servicos) => {
+        const totalBruto = servicos.reduce((acc, servico) => acc + parseFloat(servico.valor || 0), 0);
+        setTotalBruto(totalBruto);
+        setTotalLiquido(totalBruto); // Ajuste conforme necessário
+    };
+
+    const addServico = () => {
+        setServicos([...servicos, { descricao: '', status: 'ORCAMENTO', valor: 0 }]);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         const orcamento = {
-            cliente: clienteSelecionado,
-            veiculo,
-            placa,
-            marca,
-            ano,
-            servicos
+            cliente: { id: clienteId },
+            veiculo: { id: veiculoId },
+            servicos: servicos,
+            totalBruto: totalBruto,
+            totalLiquido: totalLiquido
         };
+
         try {
-            await axios.post('http://localhost:8080/api/orcamentos', orcamento);
-            router.push('/');
+            const response = await axios.post('/api/orcamentos', orcamento);
+            console.log('Orçamento cadastrado com sucesso:', response.data);
+            router.push('/orcamentos');
         } catch (error) {
             console.error('Erro ao cadastrar orçamento:', error);
         }
@@ -97,131 +91,98 @@ const Orcamento = () => {
                 <p>ammecanica9l@gmail.com</p>
                 <p>CNPJ: 44.230.807/0001-96</p>
             </div>
-            <div className="mb-8">
-                <h3 className="text-xl font-semibold">Cliente:</h3>
-                <select
-                    value={clienteSelecionado ? clienteSelecionado.id : ''}
-                    onChange={handleClienteChange}
-                    className="w-full p-2 border border-gray-300 rounded mt-1 mb-2"
-                >
-                    <option value="">Selecione um Cliente</option>
-                    {clientes.map(cliente => (
-                        <option key={cliente.id} value={cliente.id}>
-                            {cliente.nome}
-                        </option>
-                    ))}
-                </select>
-                <p>Fone: {clienteSelecionado ? clienteSelecionado.telefone : ''}</p>
-                <p>Veículo:</p>
-                <input
-                    type="text"
-                    value={veiculo}
-                    onChange={(e) => setVeiculo(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded mt-1 mb-2"
-                    placeholder="Veículo"
-                />
-                <p>Placa:</p>
-                <input
-                    type="text"
-                    value={placa}
-                    onChange={(e) => setPlaca(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded mt-1 mb-2"
-                    placeholder="Placa"
-                />
-                <p>Marca:</p>
-                <input
-                    type="text"
-                    value={marca}
-                    onChange={(e) => setMarca(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded mt-1 mb-2"
-                    placeholder="Marca"
-                />
-                <p>Ano:</p>
-                <input
-                    type="text"
-                    value={ano}
-                    onChange={(e) => setAno(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded mt-1 mb-2"
-                    placeholder="Ano"
-                />
-            </div>
-            <div className="mb-8">
-                <h3 className="text-xl font-semibold mb-4">SERVIÇOS/PEÇAS:</h3>
-                <table className="w-full border-collapse border border-gray-400 mb-4">
-                    <thead>
-                        <tr>
-                            <th className="border border-gray-400 p-2">ITEM</th>
-                            <th className="border border-gray-400 p-2">DESCRIÇÃO</th>
-                            <th className="border border-gray-400 p-2">UNI</th>
-                            <th className="border border-gray-400 p-2">VALOR</th>
-                            <th className="border border-gray-400 p-2">TOTAL</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {servicos.map((servico, index) => (
-                            <tr key={index}>
-                                <td className="border border-gray-400 p-2">{index + 1}</td>
-                                <td className="border border-gray-400 p-2">
-                                    <input
-                                        type="text"
-                                        value={servico.descricao}
-                                        onChange={(e) => handleChangeServico(index, 'descricao', e.target.value)}
-                                        className="w-full p-2 border border-gray-300 rounded"
-                                    />
-                                </td>
-                                <td className="border border-gray-400 p-2">
-                                    <input
-                                        type="number"
-                                        value={servico.unidade}
-                                        onChange={(e) => handleChangeServico(index, 'unidade', e.target.value)}
-                                        className="w-full p-2 border border-gray-300 rounded"
-                                    />
-                                </td>
-                                <td className="border border-gray-400 p-2">
-                                    <input
-                                        type="number"
-                                        value={servico.valor}
-                                        onChange={(e) => handleChangeServico(index, 'valor', e.target.value)}
-                                        className="w-full p-2 border border-gray-300 rounded"
-                                    />
-                                </td>
-                                <td className="border border-gray-400 p-2">
-                                    <input
-                                        type="number"
-                                        value={servico.total}
-                                        onChange={(e) => handleChangeServico(index, 'total', e.target.value)}
-                                        className="w-full p-2 border border-gray-300 rounded"
-                                    />
-                                </td>
-                            </tr>
+            <form onSubmit={handleSubmit}>
+                <div className="mb-8">
+                    <h3 className="text-xl font-semibold">Cliente:</h3>
+                    <select
+                        value={clienteId}
+                        onChange={(e) => setClienteId(e.target.value)}
+                        className="border p-2 w-full"
+                    >
+                        <option value="">Selecione um Cliente</option>
+                        {clientes.map(cliente => (
+                            <option key={cliente.id} value={cliente.id}>
+                                {cliente.nome}
+                            </option>
                         ))}
-                    </tbody>
-                </table>
-                <button
-                    type="button"
-                    onClick={handleAddServico}
-                    className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
-                >
-                    Adicionar Serviço/Peça
-                </button>
-                <p className="mt-4">OBS: PAGAMENTO DE 50% NA AUTORIZAÇÃO DO SERVIÇO E O RESTANTE NO ATO DA ENTREGA.</p>
-                <h3 className="text-xl font-semibold mt-4">SERVIÇO TOTAL BRUTO: R${totalBruto}</h3>
-                <h3 className="text-xl font-semibold">TOTAL LIQUIDO: R${totalBruto}</h3>
-            </div>
-            <div className="mt-8">
-                <p className="border-t border-gray-400 pt-4">_______________________________________</p>
-                <p>Am SERVIÇOS DE MECÂNICA DE VEÍCULOS AUTOMOTORES LTDA-ME</p>
-                <p>Manaus, {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
-            </div>
-            <button
-                type="submit"
-                onClick={handleSubmit}
-                className="bg-green-500 text-white px-4 py-2 rounded mt-4"
-            >
-                Salvar Orçamento
-            </button>
+                    </select>
+                </div>
+                <div className="mb-8">
+                    <h3 className="text-xl font-semibold">Veículo:</h3>
+                    <select
+                        value={veiculoId}
+                        onChange={(e) => setVeiculoId(e.target.value)}
+                        className="border p-2 w-full"
+                    >
+                        <option value="">Selecione um Veículo</option>
+                        {veiculos.map(veiculo => (
+                            <option key={veiculo.id} value={veiculo.id}>
+                                {veiculo.modelo} - {veiculo.placa}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className="mb-8">
+                    <h3 className="text-xl font-semibold mb-4">SERVIÇOS/PEÇAS:</h3>
+                    <table className="w-full border-collapse border border-gray-400">
+                        <thead>
+                            <tr>
+                                <th className="border border-gray-400 p-2">ITEM</th>
+                                <th className="border border-gray-400 p-2">DESCRIÇÃO</th>
+                                <th className="border border-gray-400 p-2">UNI</th>
+                                <th className="border border-gray-400 p-2">VALOR</th>
+                                <th className="border border-gray-400 p-2">TOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {servicos.map((servico, index) => (
+                                <tr key={index}>
+                                    <td className="border border-gray-400 p-2">{index + 1}</td>
+                                    <td className="border border-gray-400 p-2">
+                                        <input
+                                            type="text"
+                                            value={servico.descricao}
+                                            onChange={(e) => handleServicoChange(index, 'descricao', e.target.value)}
+                                            className="border p-2 w-full"
+                                        />
+                                    </td>
+                                    <td className="border border-gray-400 p-2">1</td>
+                                    <td className="border border-gray-400 p-2">
+                                        <input
+                                            type="number"
+                                            value={servico.valor}
+                                            onChange={(e) => handleServicoChange(index, 'valor', e.target.value)}
+                                            className="border p-2 w-full"
+                                        />
+                                    </td>
+                                    <td className="border border-gray-400 p-2">
+                                        {parseFloat(servico.valor).toFixed(2)}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    <button
+                        type="button"
+                        onClick={addServico}
+                        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+                    >
+                        Adicionar Serviço/Peça
+                    </button>
+                </div>
+                <div className="mb-8">
+                    <p className="mt-4">OBS: PAGAMENTO DE 50% NA AUTORIZAÇÃO DO SERVIÇO E O RESTANTE NO ATO DA ENTREGA.</p>
+                    <h3 className="text-xl font-semibold mt-4">SERVIÇO TOTAL BRUTO: R${totalBruto.toFixed(2)}</h3>
+                    <h3 className="text-xl font-semibold">TOTAL LIQUIDO: R${totalLiquido.toFixed(2)}</h3>
+                </div>
+                <div className="mt-8">
+                    <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded">
+                        Cadastrar Orçamento
+                    </button>
+                </div>
+            </form>
         </div>
     );
 };
 
-export default Orcamento;
+export default dynamic(() => Promise.resolve(OrcamentoPage), { ssr: false });
